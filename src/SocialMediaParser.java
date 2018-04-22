@@ -61,29 +61,45 @@ public class SocialMediaParser {
 	 *          Line to clean
 	 * @return Cleaned Line
 	 */
-	private static String cleanLine(String readLine) {
+	private static String cleanLine(String readLine) {		
+		/** LINKS REMOVED */
+		readLine = readLine.replaceAll("http[^\\s]*", " ");
+		
 		/** REPLACES */
+		readLine = readLine.replaceAll(",", " ");
+		readLine = readLine.replaceAll(";", " ");
+		readLine = readLine.replaceAll("-", " ");
+		readLine = readLine.replaceAll("\\.", " ");
+		readLine = readLine.replaceAll("\\?", " ");
+		readLine = readLine.replaceAll("\\!", " ");
+		readLine = readLine.replaceAll(":", " ");
 		readLine = readLine.replaceAll("^ ", "");
-		readLine = readLine.replaceAll("‰Ûª", "'");
+		readLine = readLine.replaceAll("‰Ûª", "");
 		readLine = readLine.replaceAll("‰Û_", "%");
-		readLine = readLine.replaceAll(".@", "@");
-		readLine = readLine.replaceAll("@", " @");
+		
 		readLine = readLine.replaceAll("&amp", "&");
 		readLine = readLine.replaceAll("&gt", ">");
-		readLine = readLine.replaceAll("&lt", "<");
-		readLine = readLine.replaceAll("‰ÛÒ", "-");
+		readLine = readLine.replaceAll("&lt", "<");		
 		readLine = readLine.replaceAll("w/", "with");
 		readLine = readLine.replaceAll("\\s{2}\\s*", " ");
+		readLine = readLine.replaceAll("Ì©", "e");
 
 		/** REMOVES */
+		readLine = readLine.replaceAll("\"", "");
+		readLine = readLine.replaceAll("'", "");
+		readLine = readLine.replaceAll("'s", "");
+		readLine = readLine.replaceAll("å£", "");
+		readLine = readLine.replaceAll("ì_", "");
+		readLine = readLine.replaceAll("òa", "");		
+		readLine = readLine.replaceAll("ì¢", "");
+		readLine = readLine.replaceAll("‰ââ", "");
+		readLine = readLine.replaceAll("‰ÛÒ", "");
+		readLine = readLine.replaceAll("‰Û÷", "");
+		readLine = readLine.replaceAll("Ì©", "");
 		readLine = readLine.replaceAll("‰Û", "");
 		readLine = readLine.replaceAll("‰ÛÏ", "");
 		readLine = readLine.replaceAll("åÊ", "");
-		readLine = readLine.replaceAll(":", "");
-
-		/** LINKS REMOVED */
-		readLine = readLine.replaceAll("http[^\\s]*", " ");
-
+		
 		return readLine;
 	}
 }
