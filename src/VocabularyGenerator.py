@@ -1,6 +1,5 @@
 '''
 Created on 21 abr. 2018
-
 @author: Miguel Jiménez Gomis
 @author: Ángel Igareta
 '''
@@ -34,4 +33,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+main()
