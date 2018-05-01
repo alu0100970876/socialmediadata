@@ -1,13 +1,13 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.omg.SendingContext.RunTime;
 
 /**
  * SocialMediaParser.java
@@ -95,16 +95,21 @@ public class SocialMediaParser {
 		corpusWriter.write("Number of words in the corpus: " + wordCounter + System.lineSeparator());
 		for (Map.Entry<String, Double> entry : vocabularyFrequencyMap.entrySet()) {
 			if (entry.getValue() >= K) {
-				corpusWriter.write(
-						"Word: " + entry.getKey() + " Frequency: " + entry.getValue() + " LogProb: TODO" + System.lineSeparator());
+				double probabilityWithSmoothing = (entry.getValue() + 1) / (wordCounter + vocabularyFrequencyMap.size());
+				corpusWriter.write("Word: " + entry.getKey() + " Frequency: " + entry.getValue() + " LogProb: "
+						+ (-1) * Math.log(probabilityWithSmoothing) + System.lineSeparator());
 			}
 			else {
 				minorThanK++;
 			}
 		}
-		corpusWriter
-				.write("Word: " + UNKNOWN_SYMBOL + " Frequency: " + minorThanK + " LogProb: TODO" + System.lineSeparator());
+		double probabilityWithSmoothing = (minorThanK + 1) / (wordCounter + vocabularyFrequencyMap.size());
+		corpusWriter.write("Word: " + UNKNOWN_SYMBOL + " Frequency: " + minorThanK + " LogProb: "
+				+ (-1) * Math.log(probabilityWithSmoothing) + System.lineSeparator());
 		corpusWriter.close();
+		
+		ArrayList<Double> ex = new ArrayList<Double>(vocabularyFrequencyMap.values());
+		System.out.println(Collections.min(ex));
 	}
 
 	/**
