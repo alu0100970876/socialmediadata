@@ -4,10 +4,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * SocialMediaParser.java
@@ -46,12 +48,13 @@ public class SocialMediaParser {
 		writer.close();
 
 		// Execute vocabulary generator
-		// Runtime.getRuntime().exec("rm " + VOCABULARY_FILENAME);
-		// Process p = Runtime.getRuntime()
-		// .exec("python src/VocabularyGenerator.py " + CLEANED_FILE_NAME + " " +
-		// VOCABULARY_FILENAME);
-		// p.waitFor();
-
+		BufferedWriter vocabularyWriter = new BufferedWriter(new FileWriter(VOCABULARY_FILENAME));
+		TreeSet<String> vocabularySet = new TreeSet<String>(Arrays.asList(cleanedFile.split("\\s")));
+		for (String word : vocabularySet) {
+			vocabularyWriter.write(word.toLowerCase() + System.lineSeparator());
+		}
+		vocabularyWriter.close();
+		
 		// Probability estimate
 		BufferedReader vocabularyReader = new BufferedReader(new FileReader(VOCABULARY_FILENAME));
 		TreeMap<String, Double> vocabularyFrequencyMap = new TreeMap<String, Double>();
@@ -63,7 +66,12 @@ public class SocialMediaParser {
 		for (String corpusFileName : CORPUS_FILENAMES) {
 			setCorpusFrequency(corpusFileName, vocabularyFrequencyMap);
 		}
-
+		
+		// Dada una frase w = {w1, w2, w3..., wn}
+		// P(W) = P(w1) x ... x P(w2)
+		// Deberemos calcular:
+		// P(I|W) -> P(w1|I) x .. P(w2|I) x P(I) # Pero en logaritmos
+ 
 		// for (Map.Entry<String, Double> entry : vocabularyFrequencyMap.entrySet()) {
 		// System.out.println(entry);
 		// }
@@ -89,27 +97,23 @@ public class SocialMediaParser {
 			}
 		}
 		corpusReader.close();
-
+		
 		int minorThanK = 0;
 		BufferedWriter corpusWriter = new BufferedWriter(new FileWriter(corpusFileName.split("\\.")[0] + "_learning.txt"));
 		corpusWriter.write("Number of words in the corpus: " + wordCounter + System.lineSeparator());
+		corpusWriter.write("Number of words in the corpus_todo: " + vocabularyFrequencyMap.size() + System.lineSeparator());
 		for (Map.Entry<String, Double> entry : vocabularyFrequencyMap.entrySet()) {
-			if (entry.getValue() >= K) {
-				double probabilityWithSmoothing = (entry.getValue() + 1) / (wordCounter + vocabularyFrequencyMap.size());
-				corpusWriter.write("Word: " + entry.getKey() + " Frequency: " + entry.getValue() + " LogProb: "
-						+ (-1) * Math.log(probabilityWithSmoothing) + System.lineSeparator());
-			}
-			else {
-				minorThanK++;
-			}
+			double probabilityWithSmoothing = (entry.getValue() + 1) / (wordCounter + vocabularyFrequencyMap.size());
+			corpusWriter.write("Word: " + entry.getKey() + " Frequency: " + entry.getValue() + " LogProb: "
+				+ Math.log10(probabilityWithSmoothing) + System.lineSeparator());
 		}
-		double probabilityWithSmoothing = (minorThanK + 1) / (wordCounter + vocabularyFrequencyMap.size());
+		double probabilityWithSmoothing = (1.0) / (wordCounter + vocabularyFrequencyMap.size());
 		corpusWriter.write("Word: " + UNKNOWN_SYMBOL + " Frequency: " + minorThanK + " LogProb: "
-				+ (-1) * Math.log(probabilityWithSmoothing) + System.lineSeparator());
+				+ Math.log10(probabilityWithSmoothing) + System.lineSeparator());
 		corpusWriter.close();
 		
-		ArrayList<Double> ex = new ArrayList<Double>(vocabularyFrequencyMap.values());
-		System.out.println(Collections.min(ex));
+//		ArrayList<Double> ex = new ArrayList<Double>(vocabularyFrequencyMap.values());
+//		System.out.println(Collections.min(ex));
 	}
 
 	/**
@@ -140,7 +144,8 @@ public class SocialMediaParser {
 	 */
 	private static String cleanLine(String readLine) {
 		/** LINKS REMOVED */
-		readLine = readLine.replaceAll("http[^\\s]*", " ");
+		readLine = readLine.replaceAll("http[^\\s]*", " _url_ ");
+		readLine = readLine.replaceAll("[0-9]+", "_number_");
 
 		/** REPLACES */
 		readLine = readLine.replaceAll(",", " ");
@@ -150,21 +155,20 @@ public class SocialMediaParser {
 		readLine = readLine.replaceAll("\\?", " ");
 		readLine = readLine.replaceAll("\\!", " ");
 		readLine = readLine.replaceAll(":", " ");
-		readLine = readLine.replaceAll("^ ", "");
-		readLine = readLine.replaceAll("‰Ûª", "");
+		readLine = readLine.replaceAll("\"", "");
+		readLine = readLine.replaceAll("'", "");
 		readLine = readLine.replaceAll("‰Û_", "%");
 
-		readLine = readLine.replaceAll("&amp", "&");
-		readLine = readLine.replaceAll("&gt", ">");
-		readLine = readLine.replaceAll("&lt", "<");
-		readLine = readLine.replaceAll("w/", "with");
-		readLine = readLine.replaceAll("\\s{2}\\s*", " ");
-		readLine = readLine.replaceAll("Ì©", "e");
+//		readLine = readLine.replaceAll("&amp", "&");
+//		readLine = readLine.replaceAll("&gt", ">");
+//		readLine = readLine.replaceAll("&lt", "<");
+//		readLine = readLine.replaceAll("w/", "with");
+//		readLine = readLine.replaceAll("\\s{2}\\s*", " ");
+//		readLine = readLine.replaceAll("Ì©", "e");
 
 		/** REMOVES */
 		readLine = readLine.replaceAll("\"", "");
 		readLine = readLine.replaceAll("'", "");
-		readLine = readLine.replaceAll("'s", "");
 		readLine = readLine.replaceAll("å£", "");
 		readLine = readLine.replaceAll("ì_", "");
 		readLine = readLine.replaceAll("òa", "");
@@ -176,6 +180,9 @@ public class SocialMediaParser {
 		readLine = readLine.replaceAll("‰Û", "");
 		readLine = readLine.replaceAll("‰ÛÏ", "");
 		readLine = readLine.replaceAll("åÊ", "");
+		readLine = readLine.replaceAll("‰ûª", "");
+		readLine = readLine.replaceAll("‰û¢", "");
+		readLine = readLine.replaceAll("ì¢‰ââ", "");
 
 		return readLine;
 	}
