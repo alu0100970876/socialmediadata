@@ -58,10 +58,9 @@ public class SocialMediaParser {
 		actionCorpus.writeCorpus(CORPUS_ACTION_FILENAME);
 		dialogCorpus.writeCorpus(CORPUS_DIALOG_FILENAME);
 		informationCorpus.writeCorpus(CORPUS_INFORMATION_FILENAME);
-
-		// Dada una frase w = {w1, w2, w3..., wn}
-		// P(W) = P(w1) x ... x P(w2)
-		// Deberemos calcular:
-		// P(I|W) -> P(w1|I) x .. P(w2|I) x P(I) # Pero en logaritmos
+		
+		// TODO Falta * P(I) -> // P(I|W) -> P(w1|I) x .. P(w2|I) x P(I) # Pero en logaritmos
+		Classifier classifier = new Classifier(actionCorpus, dialogCorpus, informationCorpus);
+		System.out.println(classifier.classifyLine("Nice photo, thanks for giving back! RT @Kentoro47 @ChildrensAidNYC #CitiVolunteers #wagonroadcamp http://t.co/XypKiZk8o2"));		
 	}
 }

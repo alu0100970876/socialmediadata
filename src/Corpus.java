@@ -99,10 +99,15 @@ public class Corpus {
 	 * @param key
 	 * @return
 	 */
-	private double getProbabilityOf(Token token) {
-		double denominator = getNumberOfWordsInCorpus() + getNumberOfWordsInVocabulary();
-		double probabilityWithSmoothing = (this.tokenFrequencyMap.get(token) + 1.0) / denominator;
-		return Math.log10(probabilityWithSmoothing);
+	public double getProbabilityOf(Token token) {
+		if (getTokenFrequencyMap().containsKey(token)) { // If word in the vocabulary
+			double denominator = getNumberOfWordsInCorpus() + getNumberOfWordsInVocabulary();
+			double probabilityWithSmoothing = (this.tokenFrequencyMap.get(token) + 1.0) / denominator;
+			return Math.log10(probabilityWithSmoothing);
+		}
+		else { // Else unknown
+			return getProbabilityOf(UNKNOWN_TOKEN);
+		}
 	}
 
 	/**
