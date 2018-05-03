@@ -4,11 +4,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -25,11 +20,10 @@ import java.util.TreeSet;
  */
 public class SocialMediaParser {
 
-	private static final String UNKNOWN_SYMBOL = "<unk>";
-	private static final int K = 1;
-	private static String VOCABULARY_FILENAME = "vocabulary.txt";
-	private static String[] CORPUS_FILENAMES = new String[] { "corpus/corpus_action.txt", "corpus/corpus_dialog.txt",
-			"corpus/corpus_information.txt" };
+	private static final String VOCABULARY_FILENAME = "vocabulary.txt";
+	private static final String CORPUS_ACTION_FILENAME = "corpus/corpus_action.txt";
+	private static final String CORPUS_DIALOG_FILENAME = "corpus/corpus_dialog.txt";
+	private static final String CORPUS_INFORMATION_FILENAME = "corpus/corpus_information.txt";
 
 	/**
 	 * @param args
@@ -41,149 +35,33 @@ public class SocialMediaParser {
 			throw new IllegalArgumentException("You must specify the input txt");
 		}
 
-		final String CLEANED_FILE_NAME = "cleaned_" + args[0];
-		String cleanedFile = cleanFile(args[0]);
-		BufferedWriter writer = new BufferedWriter(new FileWriter(CLEANED_FILE_NAME));
-		writer.write(cleanedFile);
-		writer.close();
+		// Read general corpus and tokenize it.
+		BufferedReader reader = new BufferedReader(new FileReader(args[0]));
+		TreeSet<Token> tokenList = new TreeSet<Token>();
+		while (reader.ready()) {
+			ArrayList<Token> lineTokenized = Parser.tokenizeLine(reader.readLine());
+			tokenList.addAll(lineTokenized);
+		}
+		reader.close();
 
-		// Execute vocabulary generator
+		// Write vocabulary including the words in the corpus.
 		BufferedWriter vocabularyWriter = new BufferedWriter(new FileWriter(VOCABULARY_FILENAME));
-		TreeSet<String> vocabularySet = new TreeSet<String>(Arrays.asList(cleanedFile.split("\\s")));
-		for (String word : vocabularySet) {
-			vocabularyWriter.write(word.toLowerCase() + System.lineSeparator());
+		for (Token token : tokenList) {
+			vocabularyWriter.write(token.toString() + System.lineSeparator());
 		}
 		vocabularyWriter.close();
-		
-		// Probability estimate
-		BufferedReader vocabularyReader = new BufferedReader(new FileReader(VOCABULARY_FILENAME));
-		TreeMap<String, Double> vocabularyFrequencyMap = new TreeMap<String, Double>();
-		while (vocabularyReader.ready()) {
-			vocabularyFrequencyMap.put(vocabularyReader.readLine().trim(), 0.0);
-		}
-		vocabularyReader.close();
 
-		for (String corpusFileName : CORPUS_FILENAMES) {
-			setCorpusFrequency(corpusFileName, vocabularyFrequencyMap);
-		}
-		
+		Corpus actionCorpus = new Corpus(CORPUS_ACTION_FILENAME, tokenList);
+		Corpus dialogCorpus = new Corpus(CORPUS_DIALOG_FILENAME, tokenList);
+		Corpus informationCorpus = new Corpus(CORPUS_INFORMATION_FILENAME, tokenList);
+
+		actionCorpus.writeCorpus(CORPUS_ACTION_FILENAME);
+		dialogCorpus.writeCorpus(CORPUS_DIALOG_FILENAME);
+		informationCorpus.writeCorpus(CORPUS_INFORMATION_FILENAME);
+
 		// Dada una frase w = {w1, w2, w3..., wn}
 		// P(W) = P(w1) x ... x P(w2)
 		// Deberemos calcular:
 		// P(I|W) -> P(w1|I) x .. P(w2|I) x P(I) # Pero en logaritmos
- 
-		// for (Map.Entry<String, Double> entry : vocabularyFrequencyMap.entrySet()) {
-		// System.out.println(entry);
-		// }
-	}
-
-	/**
-	 * @param corupusFileName
-	 * @param vocabularyFrequencyMap
-	 * @throws IOException
-	 */
-	private static void setCorpusFrequency(String corpusFileName, TreeMap<String, Double> vocabularyFrequencyMap)
-			throws IOException {
-		BufferedReader corpusReader = new BufferedReader(new FileReader(corpusFileName));
-
-		int wordCounter = 0;
-		while (corpusReader.ready()) {
-			String[] wordsInLine = corpusReader.readLine().split("\\s");
-			for (String word : wordsInLine) {
-				if (vocabularyFrequencyMap.containsKey(word)) {
-					vocabularyFrequencyMap.put(word, vocabularyFrequencyMap.get(word) + 1);
-					wordCounter++;
-				}
-			}
-		}
-		corpusReader.close();
-		
-		int minorThanK = 0;
-		BufferedWriter corpusWriter = new BufferedWriter(new FileWriter(corpusFileName.split("\\.")[0] + "_learning.txt"));
-		corpusWriter.write("Number of words in the corpus: " + wordCounter + System.lineSeparator());
-		corpusWriter.write("Number of words in the corpus_todo: " + vocabularyFrequencyMap.size() + System.lineSeparator());
-		for (Map.Entry<String, Double> entry : vocabularyFrequencyMap.entrySet()) {
-			double probabilityWithSmoothing = (entry.getValue() + 1) / (wordCounter + vocabularyFrequencyMap.size());
-			corpusWriter.write("Word: " + entry.getKey() + " Frequency: " + entry.getValue() + " LogProb: "
-				+ Math.log10(probabilityWithSmoothing) + System.lineSeparator());
-		}
-		double probabilityWithSmoothing = (1.0) / (wordCounter + vocabularyFrequencyMap.size());
-		corpusWriter.write("Word: " + UNKNOWN_SYMBOL + " Frequency: " + minorThanK + " LogProb: "
-				+ Math.log10(probabilityWithSmoothing) + System.lineSeparator());
-		corpusWriter.close();
-		
-//		ArrayList<Double> ex = new ArrayList<Double>(vocabularyFrequencyMap.values());
-//		System.out.println(Collections.min(ex));
-	}
-
-	/**
-	 * Clean a file passed by argument.
-	 * 
-	 * @param reader
-	 * @return
-	 * @throws IOException
-	 */
-	private static String cleanFile(String inputFile) throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-		String cleanedFile = "";
-
-		while (reader.ready()) {
-			cleanedFile += cleanLine(reader.readLine()) + System.lineSeparator();
-		}
-
-		reader.close();
-		return cleanedFile;
-	}
-
-	/**
-	 * Clean the line according to the characters we can find in the text.
-	 * 
-	 * @param readLine
-	 *          Line to clean
-	 * @return Cleaned Line
-	 */
-	private static String cleanLine(String readLine) {
-		/** LINKS REMOVED */
-		readLine = readLine.replaceAll("http[^\\s]*", " _url_ ");
-		readLine = readLine.replaceAll("[0-9]+", "_number_");
-
-		/** REPLACES */
-		readLine = readLine.replaceAll(",", " ");
-		readLine = readLine.replaceAll(";", " ");
-		readLine = readLine.replaceAll("-", " ");
-		readLine = readLine.replaceAll("\\.", " ");
-		readLine = readLine.replaceAll("\\?", " ");
-		readLine = readLine.replaceAll("\\!", " ");
-		readLine = readLine.replaceAll(":", " ");
-		readLine = readLine.replaceAll("\"", "");
-		readLine = readLine.replaceAll("'", "");
-		readLine = readLine.replaceAll("‰Û_", "%");
-
-//		readLine = readLine.replaceAll("&amp", "&");
-//		readLine = readLine.replaceAll("&gt", ">");
-//		readLine = readLine.replaceAll("&lt", "<");
-//		readLine = readLine.replaceAll("w/", "with");
-//		readLine = readLine.replaceAll("\\s{2}\\s*", " ");
-//		readLine = readLine.replaceAll("Ì©", "e");
-
-		/** REMOVES */
-		readLine = readLine.replaceAll("\"", "");
-		readLine = readLine.replaceAll("'", "");
-		readLine = readLine.replaceAll("å£", "");
-		readLine = readLine.replaceAll("ì_", "");
-		readLine = readLine.replaceAll("òa", "");
-		readLine = readLine.replaceAll("ì¢", "");
-		readLine = readLine.replaceAll("‰ââ", "");
-		readLine = readLine.replaceAll("‰ÛÒ", "");
-		readLine = readLine.replaceAll("‰Û÷", "");
-		readLine = readLine.replaceAll("Ì©", "");
-		readLine = readLine.replaceAll("‰Û", "");
-		readLine = readLine.replaceAll("‰ÛÏ", "");
-		readLine = readLine.replaceAll("åÊ", "");
-		readLine = readLine.replaceAll("‰ûª", "");
-		readLine = readLine.replaceAll("‰û¢", "");
-		readLine = readLine.replaceAll("ì¢‰ââ", "");
-
-		return readLine;
 	}
 }
