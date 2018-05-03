@@ -28,35 +28,37 @@ public class Classifier {
 		this.informationCorpus = informationCorpus;
 	}
 
-	public String classifyLine(String lineToClassify) {
+	public String classifyLine(String lineToClassify, boolean verbose) {
 		ArrayList<Token> tokensToClassify = Parser.tokenizeLine(lineToClassify);
 		
 		// CAUTION! -> Putting -1 and Math.abs
-		double actionCorpusProbability = -1.0;
-		double dialogCorpusProbability = -1.0;
-		double informationCorpusProbability = -1.0;
+		double actionCorpusProbability = actionCorpus.getCorpusProbability();
+		double dialogCorpusProbability = dialogCorpus.getCorpusProbability();
+		double informationCorpusProbability = informationCorpus.getCorpusProbability();
 
 		for (Token token : tokensToClassify) {
 			actionCorpusProbability *= Math.abs(actionCorpus.getProbabilityOf(token));
 			dialogCorpusProbability *= Math.abs(dialogCorpus.getProbabilityOf(token));
 			informationCorpusProbability *= Math.abs(informationCorpus.getProbabilityOf(token));
 		}
-		System.out.println("Action Probability: " + actionCorpusProbability);
-		System.out.println("Dialog Probability: " + dialogCorpusProbability);
-		System.out.println("Information Probability: " + informationCorpusProbability);
+		if (verbose) {
+			System.out.println("Action Probability: " + actionCorpusProbability);
+			System.out.println("Dialog Probability: " + dialogCorpusProbability);
+			System.out.println("Information Probability: " + informationCorpusProbability);			
+		}
 		
 
 		double maximumProbability = Math.max(actionCorpusProbability, dialogCorpusProbability);
 		maximumProbability = Math.max(maximumProbability, informationCorpusProbability);		
 
 		if (maximumProbability == actionCorpusProbability) {
-			return "ACTION";
+			return "Action";
 		}
 		else if (maximumProbability == dialogCorpusProbability) {
-			return "DIALOG";
+			return "Dialog";
 		}
 		else if (maximumProbability == informationCorpusProbability) {
-			return "INFORMATION";
+			return "Information";
 		}
 		else {
 			throw new IllegalArgumentException("Error classifying.");

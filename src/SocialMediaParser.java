@@ -24,6 +24,7 @@ public class SocialMediaParser {
 	private static final String CORPUS_ACTION_FILENAME = "corpus/corpus_action.txt";
 	private static final String CORPUS_DIALOG_FILENAME = "corpus/corpus_dialog.txt";
 	private static final String CORPUS_INFORMATION_FILENAME = "corpus/corpus_information.txt";
+	private static final String FILE_TO_CLASSIFY = "general_corpus.csv";
 
 	/**
 	 * @param args
@@ -37,10 +38,12 @@ public class SocialMediaParser {
 
 		// Read general corpus and tokenize it.
 		BufferedReader reader = new BufferedReader(new FileReader(args[0]));
+		int totalNumberOfWords = 0;
 		TreeSet<Token> tokenList = new TreeSet<Token>();
 		while (reader.ready()) {
 			ArrayList<Token> lineTokenized = Parser.tokenizeLine(reader.readLine());
 			tokenList.addAll(lineTokenized);
+			totalNumberOfWords += lineTokenized.size();
 		}
 		reader.close();
 
@@ -51,16 +54,46 @@ public class SocialMediaParser {
 		}
 		vocabularyWriter.close();
 
-		Corpus actionCorpus = new Corpus(CORPUS_ACTION_FILENAME, tokenList);
-		Corpus dialogCorpus = new Corpus(CORPUS_DIALOG_FILENAME, tokenList);
-		Corpus informationCorpus = new Corpus(CORPUS_INFORMATION_FILENAME, tokenList);
+		Corpus actionCorpus = new Corpus(CORPUS_ACTION_FILENAME, tokenList, totalNumberOfWords);
+		Corpus dialogCorpus = new Corpus(CORPUS_DIALOG_FILENAME, tokenList, totalNumberOfWords);
+		Corpus informationCorpus = new Corpus(CORPUS_INFORMATION_FILENAME, tokenList, totalNumberOfWords);
 
 		actionCorpus.writeCorpus(CORPUS_ACTION_FILENAME);
 		dialogCorpus.writeCorpus(CORPUS_DIALOG_FILENAME);
 		informationCorpus.writeCorpus(CORPUS_INFORMATION_FILENAME);
-		
-		// TODO Falta * P(I) -> // P(I|W) -> P(w1|I) x .. P(w2|I) x P(I) # Pero en logaritmos
+
+		classify(actionCorpus, dialogCorpus, informationCorpus);
+	}
+
+	/**
+	 * @param informationCorpus
+	 * @param dialogCorpus
+	 * @param actionCorpus
+	 * @throws IOException
+	 * 
+	 */
+	private static void classify(Corpus actionCorpus, Corpus dialogCorpus, Corpus informationCorpus) throws IOException {
 		Classifier classifier = new Classifier(actionCorpus, dialogCorpus, informationCorpus);
-		System.out.println(classifier.classifyLine("Nice photo, thanks for giving back! RT @Kentoro47 @ChildrensAidNYC #CitiVolunteers #wagonroadcamp http://t.co/XypKiZk8o2"));		
+
+		// Test Classifier
+		BufferedReader solutionReader = new BufferedReader(new FileReader(FILE_TO_CLASSIFY));
+		boolean verbose = false;
+		int correctClassified = 0;
+		int totalWords = 0;
+		while (solutionReader.ready()) {
+			String rawLine = solutionReader.readLine();
+			String correctCategory = rawLine.split(",")[0].trim();
+			String lineToClassify = rawLine.split(",")[1].trim();
+
+			String classifiedCategory = classifier.classifyLine(lineToClassify, verbose);
+			if (classifiedCategory.equals(correctCategory)) {
+				correctClassified++;
+			}
+			totalWords++;
+		}
+		solutionReader.close();
+
+		double correctPercentage = (double) correctClassified / (double) totalWords;
+		System.out.println("Evaluation percentage: " + String.format("%,.2f", correctPercentage * 100) + "%");
 	}
 }

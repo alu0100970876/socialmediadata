@@ -25,6 +25,7 @@ public class Corpus {
 	private static final Token UNKNOWN_TOKEN = new Token("_unk_");
 	private int numberOfWordsInVocabulary;
 	private int numberOfWordsInCorpus;
+	private double corpusProbability;
 	private TreeMap<Token, Double> tokenFrequencyMap; // Frequency of token in this corpus
 
 	/**
@@ -32,7 +33,7 @@ public class Corpus {
 	 * @param tokenList
 	 * @throws IOException
 	 */
-	public Corpus(String corpusFilename, TreeSet<Token> vocabularyTokenList) throws IOException {
+	public Corpus(String corpusFilename, TreeSet<Token> vocabularyTokenList, int totalNumberOfWords) throws IOException {
 		setNumberOfWordsInCorpus(0);
 		setNumberOfWordsInVocabulary(vocabularyTokenList.size());
 		initializeTokenFrequencyMap(vocabularyTokenList);
@@ -51,7 +52,7 @@ public class Corpus {
 				}
 			}
 		}
-
+		setCorpusProbability(Math.log((double) getNumberOfWordsInCorpus() / (double) totalNumberOfWords));
 		corpusReader.close();
 	}
 
@@ -86,6 +87,7 @@ public class Corpus {
 		String corpusString = "";
 		corpusString += "Number of words in the corpus: " + getNumberOfWordsInCorpus() + System.lineSeparator();
 		corpusString += "Number of words in the vocabulary: " + getNumberOfWordsInVocabulary() + System.lineSeparator();
+		corpusString += "Probability of corpus: " + getCorpusProbability() + System.lineSeparator();
 
 		for (Map.Entry<Token, Double> entry : getTokenFrequencyMap().entrySet()) {
 			corpusString += "Word: " + entry.getKey() + " Frequency: " + entry.getValue() + " LogProb: "
@@ -103,7 +105,7 @@ public class Corpus {
 		if (getTokenFrequencyMap().containsKey(token)) { // If word in the vocabulary
 			double denominator = getNumberOfWordsInCorpus() + getNumberOfWordsInVocabulary();
 			double probabilityWithSmoothing = (this.tokenFrequencyMap.get(token) + 1.0) / denominator;
-			return Math.log10(probabilityWithSmoothing);
+			return Math.log(probabilityWithSmoothing);
 		}
 		else { // Else unknown
 			return getProbabilityOf(UNKNOWN_TOKEN);
@@ -153,6 +155,20 @@ public class Corpus {
 	 */
 	private void setNumberOfWordsInCorpus(int numberOfWordsInCorpus) {
 		this.numberOfWordsInCorpus = numberOfWordsInCorpus;
+	}
+
+	/**
+	 * @return the corpusProbability
+	 */
+	public double getCorpusProbability() {
+		return corpusProbability;
+	}
+
+	/**
+	 * @param corpusProbability the corpusProbability to set
+	 */
+	public void setCorpusProbability(double corpusProbability) {
+		this.corpusProbability = corpusProbability;
 	}
 
 }
