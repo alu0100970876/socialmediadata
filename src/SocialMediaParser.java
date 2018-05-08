@@ -25,6 +25,7 @@ public class SocialMediaParser {
 	private static final String CORPUS_DIALOG_FILENAME = "corpus/corpus_dialog.txt";
 	private static final String CORPUS_INFORMATION_FILENAME = "corpus/corpus_information.txt";
 	private static final String FILE_TO_CLASSIFY = "general_corpus.csv";
+	private static final String CLASSIFY_OUTPUT = "classification.txt";
 
 	/**
 	 * @param args
@@ -38,11 +39,13 @@ public class SocialMediaParser {
 
 		// Read general corpus and tokenize it.
 		BufferedReader reader = new BufferedReader(new FileReader(args[0]));
+		int totalNumberOfLines = 0;
 		int totalNumberOfWords = 0;
 		TreeSet<Token> tokenList = new TreeSet<Token>();
 		while (reader.ready()) {
 			ArrayList<Token> lineTokenized = Parser.tokenizeLine(reader.readLine());
 			tokenList.addAll(lineTokenized);
+			totalNumberOfLines++;
 			totalNumberOfWords += lineTokenized.size();
 		}
 		reader.close();
@@ -57,6 +60,13 @@ public class SocialMediaParser {
 		Corpus actionCorpus = new Corpus(CORPUS_ACTION_FILENAME, tokenList, totalNumberOfWords);
 		Corpus dialogCorpus = new Corpus(CORPUS_DIALOG_FILENAME, tokenList, totalNumberOfWords);
 		Corpus informationCorpus = new Corpus(CORPUS_INFORMATION_FILENAME, tokenList, totalNumberOfWords);
+
+		// Corpus actionCorpus = new Corpus(CORPUS_ACTION_FILENAME, tokenList,
+		// totalNumberOfLines);
+		// Corpus dialogCorpus = new Corpus(CORPUS_DIALOG_FILENAME, tokenList,
+		// totalNumberOfLines);
+		// Corpus informationCorpus = new Corpus(CORPUS_INFORMATION_FILENAME, tokenList,
+		// totalNumberOfLines);
 
 		actionCorpus.writeCorpus(CORPUS_ACTION_FILENAME);
 		dialogCorpus.writeCorpus(CORPUS_DIALOG_FILENAME);
@@ -77,6 +87,7 @@ public class SocialMediaParser {
 
 		// Test Classifier
 		BufferedReader solutionReader = new BufferedReader(new FileReader(FILE_TO_CLASSIFY));
+		BufferedWriter solutionWriter = new BufferedWriter(new FileWriter(CLASSIFY_OUTPUT));
 		boolean verbose = false;
 		int correctClassified = 0;
 		int totalWords = 0;
@@ -86,12 +97,14 @@ public class SocialMediaParser {
 			String lineToClassify = rawLine.split(",")[1].trim();
 
 			String classifiedCategory = classifier.classifyLine(lineToClassify, verbose);
+			solutionWriter.write(classifiedCategory + " ; " + lineToClassify + System.lineSeparator()); // write it
 			if (classifiedCategory.equals(correctCategory)) {
 				correctClassified++;
 			}
 			totalWords++;
 		}
 		solutionReader.close();
+		solutionWriter.close();
 
 		double correctPercentage = (double) correctClassified / (double) totalWords;
 		System.out.println("Evaluation percentage: " + String.format("%,.2f", correctPercentage * 100) + "%");

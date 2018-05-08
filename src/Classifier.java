@@ -37,16 +37,15 @@ public class Classifier {
 		double informationCorpusProbability = informationCorpus.getCorpusProbability();
 
 		for (Token token : tokensToClassify) {
-			actionCorpusProbability *= Math.abs(actionCorpus.getProbabilityOf(token));
-			dialogCorpusProbability *= Math.abs(dialogCorpus.getProbabilityOf(token));
-			informationCorpusProbability *= Math.abs(informationCorpus.getProbabilityOf(token));
+			actionCorpusProbability += actionCorpus.getProbabilityOf(token);
+			dialogCorpusProbability += dialogCorpus.getProbabilityOf(token);
+			informationCorpusProbability += informationCorpus.getProbabilityOf(token);
 		}
 		if (verbose) {
 			System.out.println("Action Probability: " + actionCorpusProbability);
 			System.out.println("Dialog Probability: " + dialogCorpusProbability);
 			System.out.println("Information Probability: " + informationCorpusProbability);			
 		}
-		
 
 		double maximumProbability = Math.max(actionCorpusProbability, dialogCorpusProbability);
 		maximumProbability = Math.max(maximumProbability, informationCorpusProbability);		

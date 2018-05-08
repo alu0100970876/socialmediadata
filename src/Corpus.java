@@ -33,11 +33,12 @@ public class Corpus {
 	 * @param tokenList
 	 * @throws IOException
 	 */
-	public Corpus(String corpusFilename, TreeSet<Token> vocabularyTokenList, int totalNumberOfWords) throws IOException {
+	public Corpus(String corpusFilename, TreeSet<Token> vocabularyTokenList, int totalNumberOfLines) throws IOException {
 		setNumberOfWordsInCorpus(0);
 		setNumberOfWordsInVocabulary(vocabularyTokenList.size());
 		initializeTokenFrequencyMap(vocabularyTokenList);
 
+		int numberOfLines = 0;
 		// Read probability
 		BufferedReader corpusReader = new BufferedReader(new FileReader(corpusFilename));
 		while (corpusReader.ready()) {
@@ -51,8 +52,9 @@ public class Corpus {
 					this.numberOfWordsInCorpus++;
 				}
 			}
+			numberOfLines ++;
 		}
-		setCorpusProbability(Math.log((double) getNumberOfWordsInCorpus() / (double) totalNumberOfWords));
+		setCorpusProbability(Math.log((double) numberOfWordsInCorpus / (double) totalNumberOfLines));
 		corpusReader.close();
 	}
 
