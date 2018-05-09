@@ -51,13 +51,13 @@ public class Classifier {
 		maximumProbability = Math.max(maximumProbability, informationCorpusProbability);		
 
 		if (maximumProbability == actionCorpusProbability) {
-			return "Action";
+			return "A";
 		}
 		else if (maximumProbability == dialogCorpusProbability) {
-			return "Dialog";
+			return "D";
 		}
 		else if (maximumProbability == informationCorpusProbability) {
-			return "Information";
+			return "I";
 		}
 		else {
 			throw new IllegalArgumentException("Error classifying.");

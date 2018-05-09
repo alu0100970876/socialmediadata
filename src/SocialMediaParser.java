@@ -24,8 +24,8 @@ public class SocialMediaParser {
 	private static final String CORPUS_ACTION_FILENAME = "corpus/corpus_action.txt";
 	private static final String CORPUS_DIALOG_FILENAME = "corpus/corpus_dialog.txt";
 	private static final String CORPUS_INFORMATION_FILENAME = "corpus/corpus_information.txt";
-	private static final String FILE_TO_CLASSIFY = "general_corpus.csv";
-	private static final String CLASSIFY_OUTPUT = "classification.txt";
+	private static final String FILE_TO_CLASSIFY = "classify-test.txt";
+	private static final String CLASSIFY_OUTPUT = "classify-test-result.txt";
 
 	/**
 	 * @param args
@@ -93,14 +93,16 @@ public class SocialMediaParser {
 		int totalWords = 0;
 		while (solutionReader.ready()) {
 			String rawLine = solutionReader.readLine();
-			String correctCategory = rawLine.split(",")[0].trim();
-			String lineToClassify = rawLine.split(",")[1].trim();
+			System.out.println(rawLine);
+			//String correctCategory = rawLine.split(",")[0].trim();
+			//String lineToClassify = rawLine.split(",")[1].trim();
 
-			String classifiedCategory = classifier.classifyLine(lineToClassify, verbose);
-			solutionWriter.write(classifiedCategory + " ; " + lineToClassify + System.lineSeparator()); // write it
-			if (classifiedCategory.equals(correctCategory)) {
-				correctClassified++;
-			}
+			String classifiedCategory = classifier.classifyLine(rawLine, verbose);
+			//solutionWriter.write(classifiedCategory + " ; " + lineToClassify + System.lineSeparator()); // write it
+			solutionWriter.write(classifiedCategory + System.lineSeparator()); // write it
+//			if (classifiedCategory.equals(correctCategory)) {
+//				correctClassified++;
+//			}
 			totalWords++;
 		}
 		solutionReader.close();
